@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Demo booking widget</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #f4f1ea;
+      color: #1d1a16;
+    }
+    header { padding: 1.25rem 1.5rem 0; }
+    h1 { font-size: 1.4rem; margin: 0 0 0.25rem; }
+    p.lede { margin: 0 0 1rem; max-width: 40rem; }
+    #cookie-banner {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.5rem;
+      background: #1d1a16;
+      color: #fff;
+    }
+    #cookie-banner button {
+      background: #fff;
+      color: #1d1a16;
+      border: 0;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="cookie-banner">
+    <span>This offline demo does not store a preference.</span>
+    <button type="button">Accept</button>
+  </div>
+  <header>
+    <h1>Example Studio</h1>
+    <p class="lede">
+      Synthetic booking widget used by <code>booking-scraper --demo</code>.
+      The calendar lives in an open shadow root. None of these appointments,
+      prices, or names are real.
+    </p>
+  </header>
+  <!-- 11 bookable slots across April and May 2026. One empty day, one disabled day per month. -->
+  <booking-widget data-type="appointments"></booking-widget>
+  <script>
+    const MONTHS = [
+      {
+        label: "April 2026",
+        days: [
+          { date: "2026-04-06", disabled: true, slots: [] },
+          {
+            date: "2026-04-07",
+            slots: [
+              slot("nl-20260407-0930", "2026-04-07", "Assisted Stretch (50 mins)", "Avery Example", "09:30 AM", "10:20 AM", "£48.00", 50, 1, 1, "Studio A"),
+              slot("nl-20260407-1100", "2026-04-07", "Recovery Session (30 mins)", "Jordan Example", "11:00 AM", "11:30 AM", "£32.00", 30, 4, 3, "Studio B"),
+              slot("nl-20260407-1800", "2026-04-07", "Assisted Stretch (50 mins)", "Sam Example", "06:00 PM", "06:50 PM", "£48.00", 50, 1, 1, "Studio A")
+            ]
+          },
+          {
+            date: "2026-04-08",
+            slots: [
+              slot("nl-20260408-0715", "2026-04-08", "Assisted Stretch (50 mins)", "Avery Example", "07:15 AM", "08:05 AM", "£48.00", 50, 1, 1, "Studio A"),
+              slot("nl-20260408-1300", "2026-04-08", "Deep Tissue (50 mins)", "Sam Example", "01:00 PM", "01:50 PM", "£65.00", 50, 2, 2, "Room 2")
+            ]
+          },
+          {
+            date: "2026-04-10",
+            slots: [
+              slot("nl-20260410-1630", "2026-04-10", "Sports Massage (80 mins)", "Jordan Example", "04:30 PM", "05:50 PM", "£90.00", 80, 1, 1, "Studio B")
+            ]
+          },
+          { date: "2026-04-14", slots: [] }
+        ]
+      },
+      {
+        label: "May 2026",
+        days: [
+          {
+            date: "2026-05-01",
+            slots: [
+              slot("nl-20260501-1000", "2026-05-01", "Assisted Stretch (50 mins)", "Sam Example", "10:00 AM", "10:50 AM", "£48.00", 50, 1, 1, "Studio A"),
+              slot("nl-20260501-1515", "2026-05-01", "Recovery Session (30 mins)", "Avery Example", "03:15 PM", "03:45 PM", "£32.00", 30, 6, 4, "Studio B")
+            ]
+          },
+          { date: "2026-05-03", disabled: true, slots: [] },
+          {
+            date: "2026-05-05",
+            slots: [
+              slot("nl-20260505-1200", "2026-05-05", "Deep Tissue (50 mins)", "Jordan Example", "12:00 PM", "12:50 PM", "£65.00", 50, 1, 1, "Room 2")
+            ]
+          },
+          {
+            date: "2026-05-12",
+            slots: [
+              slot("nl-20260512-0845", "2026-05-12", "Recovery Session (30 mins)", "Sam Example", "08:45 AM", "09:15 AM", "£32.00", 30, 4, 2, "Studio B"),
+              slot("nl-20260512-1900", "2026-05-12", "Assisted Stretch (50 mins)", "Avery Example", "07:00 PM", "07:50 PM", "£48.00", 50, 1, 1, "Studio A")
+            ]
+          }
+        ]
+      }
+    ];
+
+    function slot(id, date, title, staff, start, end, price, duration, capacity, spots, room) {
+      return { id, date, title, staff, start, end, price, duration, capacity, spots, room, tz: "GMT" };
+    }
+
+    const host = document.querySelector("booking-widget");
+    const root = host.attachShadow({ mode: "open" });
+    root.innerHTML = `
+      <style>
+        :host { display: block; max-width: 40rem; margin: 0 1.5rem 2rem; }
+        .panel { background: #fff; border: 1px solid #ddd6c8; border-radius: 12px; padding: 1rem 1.1rem 1.2rem; }
+        form { display: grid; gap: 0.6rem; margin-bottom: 0.8rem; }
+        label { display: grid; gap: 0.25rem; font-size: 0.85rem; }
+        select, button { font: inherit; }
+        select { padding: 0.4rem; }
+        .hc-search { background: #1d1a16; color: #fff; border: 0; padding: 0.55rem 0.8rem; cursor: pointer; }
+        .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+        .days { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .day { width: 2.6rem; height: 2.6rem; border: 1px solid #ddd6c8; background: #fff; cursor: pointer; }
+        .day[disabled] { opacity: 0.35; cursor: not-allowed; }
+        .day.is-selected { background: #1d1a16; color: #fff; }
+        .hc-next { border: 1px solid #1d1a16; background: #fff; padding: 0.35rem 0.7rem; cursor: pointer; }
+        .hc-appointment { list-style: none; border-top: 1px solid #eee; padding: 0.75rem 0; }
+        .hc-appointments { margin: 0.6rem 0 0; padding: 0; }
+        .hc-appointment__title { margin: 0 0 0.2rem; font-size: 1rem; }
+        .hc-appointment p { margin: 0.15rem 0; }
+        a { color: #1d1a16; }
+      </style>
+      <div class="panel">
+        <form>
+          <label>Service
+            <select id="session_type" name="options[session_type_ids]">
+              <option value="">Select a service</option>
+              <option value="stretch">Assisted Stretch (50 mins)</option>
+              <option value="recovery">Recovery Session (30 mins)</option>
+              <option value="tissue">Deep Tissue (50 mins)</option>
+              <option value="massage">Sports Massage (80 mins)</option>
+            </select>
+          </label>
+          <label>Staff
+            <select id="staff_id" name="staff_id">
+              <option value="">All staff</option>
+              <option value="avery">Avery Example</option>
+              <option value="jordan">Jordan Example</option>
+              <option value="sam">Sam Example</option>
+            </select>
+          </label>
+          <button type="submit" class="hc-search">Search</button>
+        </form>
+        <div class="hc-calendar" hidden>
+          <div class="bar">
+            <strong class="hc-month-label"></strong>
+            <button type="button" class="hc-next" aria-label="Next month">Next</button>
+          </div>
+          <div class="days"></div>
+        </div>
+        <div class="hc-availability" hidden>
+          <p class="hc-empty" hidden></p>
+          <ul class="hc-appointments"></ul>
+        </div>
+      </div>
+    `;
+
+    const form = root.querySelector("form");
+    const search = root.querySelector(".hc-search");
+    const calendar = root.querySelector(".hc-calendar");
+    const label = root.querySelector(".hc-month-label");
+    const next = root.querySelector(".hc-next");
+    const days = root.querySelector(".days");
+    const availability = root.querySelector(".hc-availability");
+    const empty = root.querySelector(".hc-empty");
+    const list = root.querySelector(".hc-appointments");
+    const serviceSelect = root.querySelector("#session_type");
+    const staffSelect = root.querySelector("#staff_id");
+
+    let monthIndex = 0;
+    let selectedDate = "";
+    let serviceFilter = "";
+    let staffFilter = "";
+
+    function optionLabel(select) {
+      const option = select.selectedOptions[0];
+      if (!option || !option.value) return "";
+      return option.textContent.trim();
+    }
+
+    function showCalendar() {
+      calendar.hidden = false;
+    }
+
+    function clearResults() {
+      selectedDate = "";
+      list.innerHTML = "";
+      empty.hidden = true;
+      empty.textContent = "";
+      availability.hidden = true;
+    }
+
+    function renderMonth() {
+      const month = MONTHS[monthIndex];
+      label.textContent = month.label;
+      next.disabled = monthIndex >= MONTHS.length - 1;
+      days.innerHTML = "";
+      for (const day of month.days) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "day";
+        button.dataset.date = day.date;
+        button.textContent = String(Number(day.date.slice(-2)));
+        if (day.disabled) button.disabled = true;
+        button.addEventListener("click", () => selectDay(day.date));
+        days.appendChild(button);
+      }
+    }
+
+    function selectDay(date) {
+      selectedDate = date;
+      for (const button of days.querySelectorAll("button")) {
+        button.classList.toggle("is-selected", button.dataset.date === date);
+      }
+      const month = MONTHS[monthIndex];
+      const day = month.days.find((item) => item.date === date);
+      const slots = (day && day.slots ? day.slots : []).filter((item) => {
+        if (serviceFilter && item.title !== serviceFilter) return false;
+        if (staffFilter && item.staff !== staffFilter) return false;
+        return true;
+      });
+      availability.hidden = false;
+      if (!slots.length) {
+        list.innerHTML = "";
+        empty.hidden = false;
+        empty.textContent = "No openings on this day.";
+        return;
+      }
+      empty.hidden = true;
+      empty.textContent = "";
+      list.innerHTML = slots.map(renderSlot).join("");
+    }
+
+    function renderSlot(item) {
+      return `
+        <li class="hc-appointment" data-id="${item.id}" data-date="${item.date}" data-duration="${item.duration}" data-staff="${item.staff}">
+          <h3 class="hc-appointment__title">${item.title}</h3>
+          <p class="hc-appointment__staff">with ${item.staff}</p>
+          <p class="hc-time">${item.start} – ${item.end}</p>
+          <p class="hc-price">${item.price}</p>
+          <p class="hc-meta">Capacity: ${item.capacity} · spots left: ${item.spots} · Room: ${item.room} · ${item.tz}</p>
+          <a href="https://example.com/book/${item.id}">Book</a>
+        </li>`;
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      showCalendar();
+    });
+    search.addEventListener("click", (event) => {
+      event.preventDefault();
+      showCalendar();
+    });
+    next.addEventListener("click", () => {
+      if (monthIndex >= MONTHS.length - 1) return;
+      monthIndex += 1;
+      clearResults();
+      renderMonth();
+    });
+    serviceSelect.addEventListener("change", () => {
+      serviceFilter = optionLabel(serviceSelect);
+      if (selectedDate) selectDay(selectedDate);
+    });
+    staffSelect.addEventListener("change", () => {
+      staffFilter = optionLabel(staffSelect);
+      if (selectedDate) selectDay(selectedDate);
+    });
+
+    document.querySelector("#cookie-banner button").addEventListener("click", () => {
+      document.getElementById("cookie-banner").remove();
+    });
+
+    renderMonth();
+  </script>
+</body>
+</html>

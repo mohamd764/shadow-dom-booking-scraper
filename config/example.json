@@ -1,0 +1,67 @@
+{
+  "url": "https://example.com/book",
+  "source_site": "example.com",
+  "venue_name": "Example Studio",
+  "venue_location": "Example City",
+  "months": 2,
+  "max_days": 31,
+  "service_index": 0,
+  "staff_index": 0,
+  "headless": true,
+  "delay_seconds": 1.0,
+  "timeout_seconds": 20,
+  "result_timeout_seconds": 12,
+  "settle_seconds": 0.4,
+  "output_csv": "data/appointments.csv",
+  "diagnostics_dir": "diagnostics",
+  "save_diagnostics": false,
+  "ignore_robots": false,
+  "user_agent": "ShadowDOMBookingScraper/1.0 (appointment availability research; respects robots.txt)",
+  "csv_attempts": 8,
+  "selectors": {
+    "widget": "booking-widget[data-type=\"appointments\"], healcode-widget[data-type=\"appointments\"]",
+    "cookie_accept": [
+      "[data-cky-tag='accept-button']",
+      "button:has-text('Accept All')",
+      "button:has-text('Accept')"
+    ],
+    "service_select": [
+      "select[id*='Service' i]",
+      "select[name*='Service' i]",
+      "select[id*='session' i]",
+      "select[name*='session' i]"
+    ],
+    "staff_select": [
+      "select[id*='Staff' i]",
+      "select[name*='Staff' i]",
+      "select[id*='Instructor' i]",
+      "select[name*='Instructor' i]"
+    ],
+    "open_calendar": [
+      "button:has-text('Search')",
+      "button:has-text('Find')",
+      "button[type='submit']"
+    ],
+    "open_calendar_css": [
+      "button.hc-search",
+      "button[type='submit']"
+    ],
+    "day_cell": "[data-date]:not([disabled])",
+    "next_month": [
+      "button[aria-label*='Next' i]",
+      ".hc-next"
+    ],
+    "slot_card": [
+      "li.hc-appointment",
+      "li.appointment"
+    ],
+    "slot_title": ".hc-appointment__title, h3, .title",
+    "slot_staff": ".hc-appointment__staff, .staff, .instructor",
+    "book_link": "a[href], a[data-url]",
+    "empty_state": ".hc-empty",
+    "expand_times": [
+      "button:has-text('Show times')",
+      ".hc-show-times"
+    ]
+  }
+}

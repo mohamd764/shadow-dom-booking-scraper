@@ -1,0 +1,39 @@
+# Example schedule. The cron trigger is commented out on purpose.
+# Copy config/example.json to config/site.json, set a URL you are allowed to
+# read, and confirm robots.txt before enabling the schedule below.
+name: Scheduled scrape
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   # Weekday daytime, every 30 minutes. Only enable this if the site allows it.
+  #   - cron: "*/30 8-18 * * 1-5"
+
+permissions:
+  contents: read
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Require a local site config
+        run: |
+          if [ ! -f config/site.json ]; then
+            echo "Copy config/example.json to config/site.json and set the target URL first."
+            exit 1
+          fi
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Scrape
+        run: booking-scraper --config config/site.json --output data/appointments.csv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appointments
+          path: data/appointments.csv
+          if-no-files-found: error
